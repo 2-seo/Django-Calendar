@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
     type: "GET",
     url: '/calender/data',
   }).done(function (response) {
+    console.log(response)
     response.map(item => {
       item.fields['publicId'] = item.pk
       events.push(item.fields)
@@ -47,9 +48,7 @@ document.addEventListener('DOMContentLoaded', function() {
         let startDay = event.event.startStr
         let endDay = event.event.endStr
 
-        detailEvent(eventId, title, startDay, endDay)
-
-        console.log(id, title);
+        detailModal(eventId, title, startDay, endDay)
       },
 
       select: function(event) {
@@ -65,7 +64,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 });
 
-function detailEvent(eventId ,title, startDay, endDay) {
+function detailModal(eventId , title, startDay, endDay) {
   Swal.fire({
     title: title,
     html: `<p>시작일: ${startDay}</p><p>종료일: ${endDay}</p>`,
@@ -76,14 +75,14 @@ function detailEvent(eventId ,title, startDay, endDay) {
     cancelButtonText: '취소'
   }).then((result) => {
     if (result.isConfirmed) {
-      updateEvent()
+      updateModal(eventId)
     } else if (result.isDenied) {
       deleteEvent(eventId)
     }
   })
 }
 
-function updateEvent() {
+function updateModal(eventId) {
   Swal.mixin({
     input: 'text',
     confirmButtonText: 'Next &rarr;',
@@ -103,23 +102,47 @@ function updateEvent() {
     }
   ]).then((result) => {
     if (result.value) {
-      const answers = JSON.stringify(result.value)
-      Swal.fire({
-        title: 'All done!',
-        html: `
-          Your answers:
-          <pre><code>${answers}</code></pre>
-        `,
-        confirmButtonText: 'Lovely!'
-      })
+      const answers = result.value;
+      const title = answers[0];
+      const startDay = answers[1];
+      const endDay = answers[2];
+
+      updateEvent(eventId, title, startDay, endDay);
     }
+  });
+}
+
+function updateEvent(eventId, title, startDay, endDay) {
+  let data = {
+    title: title,
+    startDay: startDay,
+    endDay: endDay
+  }
+
+  $.ajax({
+    type: "POST",
+    url: '/calender/update/' + eventId,
+    data: data,
+    dataType: 'json'
+  }).done(function (response) {
+    Swal.fire({
+        icon: 'success',
+        title: '수정 완료!',
+        confirmButtonText: '확인'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          location.href = '/calender';
+        }
+      })
+  }).fail(function (error) {
+    console.log(error);
   });
 }
 
 function deleteEvent(eventId) {
   $.ajax({
     type: "DELETE",
-    url: '/calender/data/' + eventId,
+    url: '/calender/delete/' + eventId,
   }).done(function (response) {
     Swal.fire({
         icon: 'success',
