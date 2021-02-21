@@ -10336,7 +10336,8 @@ var FullCalendar = (function (exports) {
                 }
             };
             var component = settings.component;
-            var options = component.context.options;
+            var options = component.context.
+                s;
             var dragging = _this.dragging = new FeaturefulElementDragging(settings.el);
             dragging.touchScrollAllowed = false;
             dragging.minDistance = options.selectMinDistance || 0;
