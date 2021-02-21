@@ -8,7 +8,6 @@ document.addEventListener('DOMContentLoaded', function() {
     type: "GET",
     url: '/calender/data',
   }).done(function (response) {
-    console.log(response)
     response.map(item => {
       item.fields['publicId'] = item.pk
       events.push(item.fields)
@@ -52,7 +51,7 @@ document.addEventListener('DOMContentLoaded', function() {
       },
 
       select: function(event) {
-        // console.log(event);
+        createEventModal();
       }
     });
 
@@ -63,6 +62,36 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
 });
+
+function createEventModal() {
+  Swal.mixin({
+    input: 'text',
+    confirmButtonText: 'Next &rarr;',
+    showCancelButton: true,
+    progressSteps: ['1', '2', '3']
+  }).queue([
+    {
+      title: '일정을 입력해주세요.',
+    },
+    {
+      title: '시작일을 입력해주세요.',
+      text: '예시: 2021-02-22T12:00:00'
+    },
+    {
+      title: '종료일을 입력해주세요.',
+      text: '예시: 2021-02-22T12:00:00'
+    }
+  ]).then((result) => {
+    if (result.value) {
+      const answers = result.value;
+      const title = answers[0];
+      const startDay = answers[1];
+      const endDay = answers[2];
+
+      createEvent(title, startDay, endDay);
+    }
+  });
+}
 
 function detailModal(eventId , title, startDay, endDay) {
   Swal.fire({
@@ -109,6 +138,33 @@ function updateModal(eventId) {
 
       updateEvent(eventId, title, startDay, endDay);
     }
+  });
+}
+
+function createEvent(title, startDay, endDay) {
+  let data = {
+    title: title,
+    startDay: startDay,
+    endDay: endDay
+  }
+
+  $.ajax({
+    type: "POST",
+    url: '/calender/create/',
+    data: data,
+    dataType: 'json'
+  }).done(function (response) {
+    Swal.fire({
+        icon: 'success',
+        title: '추가 완료!',
+        confirmButtonText: '확인'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          location.href = '/calender';
+        }
+      })
+  }).fail(function (error) {
+    console.log(error);
   });
 }
 
